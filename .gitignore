@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Build output
+frontend/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+venv/
+.venv/
+*.so
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime files
+files/uploads/*
+files/temp/*
+!files/uploads/.gitkeep
+!files/temp/.gitkeep
+
+# Package lock (keep if you want deterministic installs)
+# package-lock.json

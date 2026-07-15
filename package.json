@@ -1,0 +1,17 @@
+{
+  "name": "pixel-desktop",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm -w frontend run dev",
+    "dev:backend": "python3 backend/main.py",
+    "build": "npm -w frontend run build"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.28.1"
+  }
+}
