@@ -93,13 +93,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
 
   const handleDelete = async () => {
     if (!contextMenu?.entry) return
-    if (!confirm(`Delete ${contextMenu.entry.name}?`)) return
-    try {
-      await deleteFile(contextMenu.entry.path)
-      loadFiles(currentPath)
-    } catch {
-      alert('Failed to delete')
-    }
+    await handleDeleteEntry(contextMenu.entry.path, contextMenu.entry.name)
     setContextMenu(null)
   }
 
@@ -108,6 +102,34 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
     setRenaming(contextMenu.entry.path)
     setRenameValue(contextMenu.entry.name)
     setContextMenu(null)
+  }
+
+  const selectedEntry = entries.find(e => e.path === selected)
+
+  const handleDeleteEntry = async (path: string, name: string) => {
+    if (!confirm(`Delete ${name}?`)) return
+    try {
+      await deleteFile(path)
+      if (selected === path) setSelected(null)
+      loadFiles(currentPath)
+    } catch {
+      alert('Failed to delete')
+    }
+  }
+
+  const handleDeleteSelected = () => {
+    if (!selectedEntry) return
+    handleDeleteEntry(selectedEntry.path, selectedEntry.name)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selected && !renaming) {
+      const entry = entries.find(e => e.path === selected)
+      if (entry) {
+        e.preventDefault()
+        handleDeleteEntry(entry.path, entry.name)
+      }
+    }
   }
 
   const handleRenameSubmit = async (oldPath: string) => {
@@ -125,7 +147,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white" onClick={() => setContextMenu(null)}>
+    <div className="h-full flex flex-col bg-white" onClick={() => setContextMenu(null)} onKeyDown={handleKeyDown} tabIndex={-1}>
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 py-1.5 bg-win-light border-b border-gray-300 text-xs">
         <button
@@ -139,6 +161,18 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
           className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
         >
           <Plus size={14} /> New File
+        </button>
+        <div className="w-px h-4 bg-gray-300 mx-1" />
+        <button
+          onClick={handleDeleteSelected}
+          disabled={!selected}
+          className={`flex items-center gap-1 px-2 py-1 rounded ${
+            selected
+              ? 'hover:bg-gray-200 text-red-600'
+              : 'text-gray-300 cursor-not-allowed'
+          }`}
+        >
+          <Trash2 size={14} /> Delete
         </button>
       </div>
 
