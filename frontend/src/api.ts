@@ -28,3 +28,15 @@ export async function readFile(path: string): Promise<string> {
 export async function writeFile(path: string, content: string): Promise<void> {
   await api.put('/files/write', { path, content })
 }
+
+export async function uploadWallpaper(file: File): Promise<string> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await api.post('/wallpaper', form)
+  return res.data.path
+}
+
+export async function getWallpaper(): Promise<string | null> {
+  const res = await api.get('/wallpaper')
+  return res.data.path
+}

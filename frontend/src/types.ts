@@ -24,6 +24,7 @@ export interface DesktopState {
   windows: WindowState[]
   nextZIndex: number
   startMenuOpen: boolean
+  wallpaper: string | null
   openWindow: (component: string, title: string, props?: Record<string, unknown>) => void
   closeWindow: (id: string) => void
   minimizeWindow: (id: string) => void
@@ -33,4 +34,5 @@ export interface DesktopState {
   resizeWindow: (id: string, width: number, height: number) => void
   toggleStartMenu: () => void
   closeStartMenu: () => void
+  setWallpaper: (path: string | null) => void
 }

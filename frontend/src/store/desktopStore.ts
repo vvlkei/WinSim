@@ -3,10 +3,13 @@ import type { WindowState, DesktopState } from '../types'
 
 let windowCounter = 0
 
+const STORAGE_KEY = 'pixeldesktop-wallpaper'
+
 const useDesktopStore = create<DesktopState>((set) => ({
   windows: [],
   nextZIndex: 1,
   startMenuOpen: false,
+  wallpaper: localStorage.getItem(STORAGE_KEY),
 
   openWindow: (component, title, props) =>
     set((state) => {
@@ -80,6 +83,12 @@ const useDesktopStore = create<DesktopState>((set) => ({
     set((state) => ({ startMenuOpen: !state.startMenuOpen })),
 
   closeStartMenu: () => set({ startMenuOpen: false }),
+
+  setWallpaper: (path) => {
+    if (path) localStorage.setItem(STORAGE_KEY, path)
+    else localStorage.removeItem(STORAGE_KEY)
+    set({ wallpaper: path })
+  },
 }))
 
 export default useDesktopStore
