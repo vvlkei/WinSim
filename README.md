@@ -1,4 +1,4 @@
-# PixelDesktop
+# WinSim
 
 一个模拟 Windows 桌面的 Web 全栈项目，支持窗口管理、文件操作和自定义壁纸。
 
@@ -18,7 +18,7 @@
 ## 项目结构
 
 ```
-PixelDesktop/
+WinSim/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
@@ -62,7 +62,9 @@ PixelDesktop/
 - **窗口管理** — 拖拽移动、缩放开窗、最小化/最大化/关闭、焦点切换
 - **文件管理器** — 图标网格视图、面包屑导航、右键上下文菜单
 - **文件操作** — 新建文件夹/文件、重命名、删除（工具栏按钮 / 右键菜单 / Delete 键）
-- **自定义壁纸** — 右键桌面 → Choose Wallpaper，支持 localStorage 持久化
+- **自定义壁纸** — 右键桌面 → Choose Wallpaper / Remove Wallpaper，支持 localStorage 持久化
+- **加载状态** — 文件目录切换时显示 Loading 动画
+- **安全防护** — 路径穿越检测、文件重命名注入防护、上传大小限制（10MB）
 - **后端 API** — 完整的 REST 接口，文件存储于本地文件系统
 
 ## 启动方式
@@ -95,7 +97,7 @@ npm run dev:backend    # 仅后端 (uvicorn)
 | GET | `/api/files?path=xxx` | 列出目录内容 |
 | GET | `/api/files/read?path=xxx` | 读取文件内容 |
 | POST | `/api/files` | 创建文件或目录 |
-| DELETE | `/api/files` | 删除文件或目录 |
+| DELETE | `/api/files?path=xxx` | 删除文件或目录 |
 | PUT | `/api/files/rename` | 重命名文件或目录 |
 | PUT | `/api/files/write` | 写入文件内容 |
 | POST | `/api/wallpaper` | 上传壁纸图片 |
@@ -103,7 +105,23 @@ npm run dev:backend    # 仅后端 (uvicorn)
 
 ## 更新日志
 
+### 2026-07-17
+
+- 修复：**文件重命名路径穿越漏洞**（`newName` 添加注入检测）
+- 修复：后端两个不同 `ROOT` 路径导致数据不一致
+- 修复：窗口标题栏按钮点击误触拖拽（添加 `stopPropagation`）
+- 修复：`PermissionError` 返回 403 而非 400
+- 修复：DELETE 请求改用 query param（符合 HTTP 规范）
+- 优化：`ensure_root` 改用 FastAPI `lifespan`，生产部署也生效
+- 优化：上传壁纸添加 10MB 大小限制
+- 优化：文件目录加载添加 Loading 动画
+- 优化：窗口组件本地状态同步 store prop 变化
+- 优化：后端补全 OSError 异常兜底
+- 清理：未使用的 `ChevronDown` 导入、`children` 类型字段
+- 清理：简化 `WindowWrapper` 类型、`shutil` 移至模块顶部
+
 ### 2026-07-16
+
 - 新增：自定义壁纸功能（右键桌面 → Choose Wallpaper）
 - 新增：文件删除工具栏按钮 + Delete/Backspace 快捷键
 - 新增：`.gitignore` 文件

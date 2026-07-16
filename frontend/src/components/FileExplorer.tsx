@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Folder, File, FileText, Image, Music, Video, ChevronRight, ChevronDown, Plus, Trash2, Edit3 } from 'lucide-react'
+import { Folder, File, FileText, Image, Music, Video, ChevronRight, Plus, Trash2, Edit3, Loader2 } from 'lucide-react'
 import type { FileEntry } from '../types'
 import { listFiles, createFile, deleteFile, renameFile } from '../api'
 
@@ -34,14 +34,17 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; entry: FileEntry | null } | null>(null)
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const loadFiles = useCallback(async (path: string) => {
+    setLoading(true)
     try {
       const items = await listFiles(path)
       setEntries(items)
     } catch {
       setEntries([])
     }
+    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -196,7 +199,11 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
         className="flex-1 overflow-auto p-2"
         onContextMenu={(e) => handleContextMenu(e, null)}
       >
-        {entries.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full text-gray-400 text-sm gap-2">
+            <Loader2 size={16} className="animate-spin" /> Loading...
+          </div>
+        ) : entries.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400 text-sm">
             This folder is empty
           </div>

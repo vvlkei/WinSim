@@ -10,10 +10,6 @@ class CreateRequest(BaseModel):
     isDirectory: bool = False
 
 
-class DeleteRequest(BaseModel):
-    path: str
-
-
 class RenameRequest(BaseModel):
     path: str
     newName: str
@@ -29,9 +25,11 @@ async def list_files(path: str = Query("/home")):
     try:
         return await fs.list_dir(path)
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
     except FileNotFoundError:
         return []
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.get("/read")
@@ -40,9 +38,11 @@ async def read_file(path: str = Query(...)):
         content = await fs.read_file(path)
         return {"content": content}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
     except FileNotFoundError:
         raise HTTPException(404, "File not found")
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.post("")
@@ -51,18 +51,22 @@ async def create_entry(body: CreateRequest):
         await fs.create(body.path, body.isDirectory)
         return {"success": True}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.delete("")
-async def delete_entry(body: DeleteRequest):
+async def delete_entry(path: str = Query(...)):
     try:
-        await fs.remove(body.path)
+        await fs.remove(path)
         return {"success": True}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
     except FileNotFoundError:
         raise HTTPException(404, "Not found")
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.put("/rename")
@@ -71,7 +75,9 @@ async def rename_entry(body: RenameRequest):
         await fs.rename(body.path, body.newName)
         return {"success": True}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.put("/write")
@@ -80,4 +86,6 @@ async def write_entry(body: WriteRequest):
         await fs.write_file(body.path, body.content)
         return {"success": True}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
+    except OSError as e:
+        raise HTTPException(500, str(e))

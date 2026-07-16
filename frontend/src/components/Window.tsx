@@ -1,4 +1,4 @@
-import { type ReactNode, useRef, useCallback, useState } from 'react'
+import { type ReactNode, useRef, useCallback, useState, useEffect } from 'react'
 import { X, Minus, Square } from 'lucide-react'
 import useDesktopStore from '../store/desktopStore'
 
@@ -24,6 +24,9 @@ export default function Window({
   const resizeRef = useRef<{ startX: number; startY: number; w: number; h: number } | null>(null)
   const [pos, setPos] = useState({ x, y })
   const [size, setSize] = useState({ width, height })
+
+  useEffect(() => { setPos({ x, y }) }, [x, y])
+  useEffect(() => { setSize({ width, height }) }, [width, height])
 
   const curX = maximized ? 0 : pos.x
   const curY = maximized ? 0 : pos.y
@@ -98,13 +101,13 @@ export default function Window({
           onDoubleClick={() => maximizeWindow(id)}
         >
           <div className="flex gap-1.5">
-            <button onClick={() => closeWindow(id)} className="w-3.5 h-3.5 rounded-full bg-[#E81123] hover:brightness-110 flex items-center justify-center">
+            <button onClick={(e) => { e.stopPropagation(); closeWindow(id) }} className="w-3.5 h-3.5 rounded-full bg-[#E81123] hover:brightness-110 flex items-center justify-center">
               <X size={8} className="text-white opacity-0 hover:opacity-100" />
             </button>
-            <button onClick={() => minimizeWindow(id)} className="w-3.5 h-3.5 rounded-full bg-[#F5A623] hover:brightness-110 flex items-center justify-center">
+            <button onClick={(e) => { e.stopPropagation(); minimizeWindow(id) }} className="w-3.5 h-3.5 rounded-full bg-[#F5A623] hover:brightness-110 flex items-center justify-center">
               <Minus size={8} className="text-white opacity-0 hover:opacity-100" />
             </button>
-            <button onClick={() => maximizeWindow(id)} className="w-3.5 h-3.5 rounded-full bg-[#34C74A] hover:brightness-110 flex items-center justify-center">
+            <button onClick={(e) => { e.stopPropagation(); maximizeWindow(id) }} className="w-3.5 h-3.5 rounded-full bg-[#34C74A] hover:brightness-110 flex items-center justify-center">
               <Square size={7} className="text-white opacity-0 hover:opacity-100" />
             </button>
           </div>

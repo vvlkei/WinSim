@@ -13,7 +13,7 @@ export async function createFile(path: string, isDirectory: boolean): Promise<vo
 }
 
 export async function deleteFile(path: string): Promise<void> {
-  await api.delete('/files', { data: { path } })
+  await api.delete('/files', { params: { path } })
 }
 
 export async function renameFile(path: string, newName: string): Promise<void> {

@@ -1,13 +1,13 @@
 from pathlib import Path
-import os
+import shutil
 
-ROOT = Path(os.path.abspath(Path(__file__).parent.parent / "files"))
+ROOT = Path("files").resolve()
 
 
 def _sanitize(user_path: str) -> Path:
     clean = user_path.lstrip("/")
     resolved = (ROOT / clean).resolve()
-    if not str(resolved).startswith(str(ROOT.resolve())):
+    if not str(resolved).startswith(str(ROOT)):
         raise PermissionError("Path traversal denied")
     return resolved
 
@@ -37,7 +37,6 @@ async def create(user_path: str, is_directory: bool):
 async def remove(user_path: str):
     target = _sanitize(user_path)
     if target.is_dir():
-        import shutil
         shutil.rmtree(target)
     else:
         target.unlink()
@@ -45,7 +44,11 @@ async def remove(user_path: str):
 
 async def rename(user_path: str, new_name: str):
     target = _sanitize(user_path)
-    new_path = target.parent / new_name
+    if "/" in new_name or "\\" in new_name:
+        raise PermissionError("Invalid name")
+    new_path = (target.parent / new_name).resolve()
+    if not str(new_path).startswith(str(ROOT)):
+        raise PermissionError("Path traversal denied")
     target.rename(new_path)
 
 

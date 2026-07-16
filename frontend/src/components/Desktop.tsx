@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Folder, FileCode, Terminal, Trash2, Image } from 'lucide-react'
 import useDesktopStore from '../store/desktopStore'
+import type { WindowState } from '../types'
 import WindowComponent from './Window'
 import FileExplorerComponent from './FileExplorer'
 import { uploadWallpaper } from '../api'
@@ -111,7 +112,7 @@ export default function Desktop() {
   )
 }
 
-function WindowWrapper({ win }: { win: ReturnType<typeof useDesktopStore.getState>['windows'][number] }) {
+function WindowWrapper({ win }: { win: WindowState }) {
   const renderContent = () => {
     switch (win.component) {
       case 'fileExplorer':

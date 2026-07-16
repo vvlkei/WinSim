@@ -3,7 +3,6 @@ export interface FileEntry {
   path: string
   type: 'file' | 'directory'
   size?: number
-  children?: FileEntry[]
 }
 
 export interface WindowState {
