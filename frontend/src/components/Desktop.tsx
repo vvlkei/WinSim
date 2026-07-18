@@ -4,13 +4,14 @@ import useDesktopStore from '../store/desktopStore'
 import type { WindowState } from '../types'
 import WindowComponent from './Window'
 import FileExplorerComponent from './FileExplorer'
+import TrashViewComponent from './TrashView'
 import { uploadWallpaper } from '../api'
 
 const DESKTOP_ICONS = [
   { label: 'File Explorer', icon: Folder, color: 'text-yellow-500', component: 'fileExplorer' },
   { label: 'Terminal', icon: Terminal, color: 'text-gray-700', component: 'terminal' },
   { label: 'Projects', icon: FileCode, color: 'text-blue-500', component: 'fileExplorer', props: { initialPath: '/home/projects' } },
-  { label: 'Trash', icon: Trash2, color: 'text-gray-500', component: '' },
+  { label: 'Trash', icon: Trash2, color: 'text-gray-500', component: 'trash' },
 ]
 
 const DEFAULT_BG = 'linear-gradient(135deg, #0d1b2a 0%, #1b2838 50%, #2d4a6b 100%)'
@@ -35,6 +36,10 @@ export default function Desktop() {
     setContextMenu(null)
   }
 
+  const openApp = (component: string, title: string, props?: Record<string, unknown>) => {
+    openWindow(component, title, props)
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -57,19 +62,21 @@ export default function Desktop() {
       onContextMenu={handleContextMenu}
       onClick={() => setContextMenu(null)}
     >
-      <div className="absolute top-4 left-4 flex flex-col gap-2">
+      <div className="absolute top-4 left-4 grid grid-cols-[repeat(auto-fill,80px)] gap-3">
         {DESKTOP_ICONS.map((item) => (
           <button
             key={item.label}
             onClick={() => {
               if (item.component) {
-                openWindow(item.component, item.label, item.props)
+                openApp(item.component, item.label, item.props)
               }
             }}
-            className="flex items-center gap-3 px-3 py-2 rounded text-white/90 hover:bg-white/10 transition-colors min-w-[140px]"
+            className="flex flex-col items-center gap-1 px-2 py-2 rounded text-white/90 hover:bg-white/10 transition-colors w-[76px]"
           >
-            <item.icon size={28} className={item.color} />
-            <span className="text-xs font-medium drop-shadow-lg">{item.label}</span>
+            <item.icon size={32} className={item.color} />
+            <span className="text-[11px] text-center leading-tight drop-shadow-lg break-words">
+              {item.label}
+            </span>
           </button>
         ))}
       </div>
@@ -117,6 +124,8 @@ function WindowWrapper({ win }: { win: WindowState }) {
     switch (win.component) {
       case 'fileExplorer':
         return <FileExplorerComponent {...win.props} />
+      case 'trash':
+        return <TrashViewComponent />
       default:
         return (
           <div className="flex items-center justify-center h-full text-gray-400">

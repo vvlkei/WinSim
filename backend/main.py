@@ -4,7 +4,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from routes.files import router as files_router
-from utils.file_system import ROOT as FS_ROOT
+from utils.file_system import ROOT as FS_ROOT, TRASH_DIR
 
 WALLPAPER_DIR = FS_ROOT / "wallpapers"
 
@@ -16,10 +16,11 @@ async def lifespan(_app: FastAPI):
     (FS_ROOT / "home" / "projects").mkdir(exist_ok=True)
     (FS_ROOT / "home" / "documents").mkdir(exist_ok=True)
     WALLPAPER_DIR.mkdir(exist_ok=True)
+    TRASH_DIR.mkdir(exist_ok=True)
     yield
 
 
-app = FastAPI(title="PixelDesktop Backend", lifespan=lifespan)
+app = FastAPI(title="WinSim Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

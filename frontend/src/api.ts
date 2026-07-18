@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { FileEntry } from './types'
+import type { FileEntry, TrashEntry } from './types'
 
 const api = axios.create({ baseURL: '/api' })
 
@@ -39,4 +39,17 @@ export async function uploadWallpaper(file: File): Promise<string> {
 export async function getWallpaper(): Promise<string | null> {
   const res = await api.get('/wallpaper')
   return res.data.path
+}
+
+export async function listTrash(): Promise<TrashEntry[]> {
+  const res = await api.get('/files/trash')
+  return res.data
+}
+
+export async function restoreTrash(name: string): Promise<void> {
+  await api.post('/files/trash/restore', { name })
+}
+
+export async function emptyTrash(): Promise<void> {
+  await api.delete('/files/trash')
 }

@@ -20,6 +20,10 @@ class WriteRequest(BaseModel):
     content: str = ""
 
 
+class RestoreRequest(BaseModel):
+    name: str
+
+
 @router.get("")
 async def list_files(path: str = Query("/home")):
     try:
@@ -87,5 +91,35 @@ async def write_entry(body: WriteRequest):
         return {"success": True}
     except PermissionError as e:
         raise HTTPException(403, str(e))
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.get("/trash")
+async def list_trash():
+    try:
+        return await fs.list_trash()
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.post("/trash/restore")
+async def restore_item(body: RestoreRequest):
+    try:
+        await fs.restore_from_trash(body.name)
+        return {"success": True}
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except FileNotFoundError:
+        raise HTTPException(404, "Not found")
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.delete("/trash")
+async def empty_trash():
+    try:
+        await fs.empty_trash()
+        return {"success": True}
     except OSError as e:
         raise HTTPException(500, str(e))

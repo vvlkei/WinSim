@@ -5,6 +5,13 @@ export interface FileEntry {
   size?: number
 }
 
+export interface TrashEntry {
+  name: string
+  original_path: string
+  type: 'file' | 'directory'
+  size?: number
+}
+
 export interface WindowState {
   id: string
   title: string

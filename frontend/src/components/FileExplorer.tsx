@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Folder, File, FileText, Image, Music, Video, ChevronRight, Plus, Trash2, Edit3, Loader2 } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Folder, File, FileText, Image, Music, Video, ChevronRight, Plus, Trash2, Edit3, Loader2, ChevronDown } from 'lucide-react'
 import type { FileEntry } from '../types'
 import { listFiles, createFile, deleteFile, renameFile } from '../api'
 
@@ -35,6 +35,17 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [loading, setLoading] = useState(false)
+  const [newFileMenu, setNewFileMenu] = useState(false)
+  const newFileBtnRef = useRef<HTMLButtonElement>(null)
+
+  const FILE_TYPES: { ext: string; label: string }[] = [
+    { ext: 'txt', label: 'Text File (.txt)' },
+    { ext: 'md', label: 'Markdown (.md)' },
+    { ext: 'json', label: 'JSON (.json)' },
+    { ext: 'html', label: 'HTML (.html)' },
+    { ext: 'css', label: 'CSS (.css)' },
+    { ext: 'js', label: 'JavaScript (.js)' },
+  ]
 
   const loadFiles = useCallback(async (path: string) => {
     setLoading(true)
@@ -67,31 +78,40 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
 
   const handleContextMenu = (e: React.MouseEvent, entry: FileEntry | null) => {
     e.preventDefault()
+    e.stopPropagation()
     setContextMenu({ x: e.clientX, y: e.clientY, entry })
   }
 
+  const startRename = (path: string, name: string) => {
+    setRenaming(path)
+    setRenameValue(name)
+  }
+
   const handleNewFolder = async () => {
-    const name = prompt('Enter folder name:')
-    if (!name) return
+    const name = '新文件夹'
     try {
-      await createFile(`${currentPath}/${name}`, true)
-      loadFiles(currentPath)
-    } catch (err) {
+      const fullPath = `${currentPath}/${name}`
+      await createFile(fullPath, true)
+      await loadFiles(currentPath)
+      startRename(fullPath, name)
+    } catch {
       alert('Failed to create folder')
     }
     setContextMenu(null)
   }
 
-  const handleNewFile = async () => {
-    const name = prompt('Enter file name:')
-    if (!name) return
+  const handleNewFile = async (ext = 'txt') => {
+    const name = `新文件.${ext}`
     try {
-      await createFile(`${currentPath}/${name}`, false)
-      loadFiles(currentPath)
+      const fullPath = `${currentPath}/${name}`
+      await createFile(fullPath, false)
+      await loadFiles(currentPath)
+      startRename(fullPath, name)
     } catch {
       alert('Failed to create file')
     }
     setContextMenu(null)
+    setNewFileMenu(false)
   }
 
   const handleDelete = async () => {
@@ -110,7 +130,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
   const selectedEntry = entries.find(e => e.path === selected)
 
   const handleDeleteEntry = async (path: string, name: string) => {
-    if (!confirm(`Delete ${name}?`)) return
+    if (!confirm(`Move "${name}" to trash?`)) return
     try {
       await deleteFile(path)
       if (selected === path) setSelected(null)
@@ -150,7 +170,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white" onClick={() => setContextMenu(null)} onKeyDown={handleKeyDown} tabIndex={-1}>
+    <div className="h-full flex flex-col bg-white" onClick={() => { setContextMenu(null); setNewFileMenu(false) }} onKeyDown={handleKeyDown} tabIndex={-1}>
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 py-1.5 bg-win-light border-b border-gray-300 text-xs">
         <button
@@ -160,11 +180,36 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
           <Plus size={14} /> New Folder
         </button>
         <button
-          onClick={handleNewFile}
+          onClick={handleNewFolder}
           className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
         >
-          <Plus size={14} /> New File
+          <Plus size={14} /> New Folder
         </button>
+        <div className="relative">
+          <button
+            ref={newFileBtnRef}
+            onClick={() => setNewFileMenu(!newFileMenu)}
+            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
+          >
+            <Plus size={14} /> New File <ChevronDown size={10} />
+          </button>
+          {newFileMenu && (
+            <div
+              className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 py-1 min-w-[160px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {FILE_TYPES.map((t) => (
+                <button
+                  key={t.ext}
+                  onClick={() => handleNewFile(t.ext)}
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-100 text-xs"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="w-px h-4 bg-gray-300 mx-1" />
         <button
           onClick={handleDeleteSelected}
@@ -262,7 +307,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
               <button onClick={handleNewFolder} className="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-win-blue hover:text-white">
                 <Folder size={14} /> New Folder
               </button>
-              <button onClick={handleNewFile} className="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-win-blue hover:text-white">
+              <button onClick={() => handleNewFile('txt')} className="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-win-blue hover:text-white">
                 <File size={14} /> New File
               </button>
             </>
@@ -277,7 +322,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
                 <Edit3 size={14} /> Rename
               </button>
               <button onClick={handleDelete} className="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-red-500 hover:text-white text-red-600">
-                <Trash2 size={14} /> Delete
+                <Trash2 size={14} /> Move to Trash
               </button>
             </>
           )}

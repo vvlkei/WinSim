@@ -3,7 +3,7 @@ import type { WindowState, DesktopState } from '../types'
 
 let windowCounter = 0
 
-const STORAGE_KEY = 'pixeldesktop-wallpaper'
+const STORAGE_KEY = 'winsim-wallpaper'
 
 const useDesktopStore = create<DesktopState>((set) => ({
   windows: [],
