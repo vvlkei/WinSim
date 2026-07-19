@@ -1,4 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse
+from pathlib import Path
+import mimetypes
 from pydantic import BaseModel
 from utils import file_system as fs
 
@@ -121,5 +124,30 @@ async def empty_trash():
     try:
         await fs.empty_trash()
         return {"success": True}
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.get("/download")
+async def download_file(path: str = Query(...)):
+    try:
+        file_path = await fs.resolve_path(path)
+        p = Path(file_path)
+        if not p.is_file():
+            raise HTTPException(404, "File not found")
+        media_type, _ = mimetypes.guess_type(str(p))
+        return FileResponse(path=str(p), media_type=media_type)
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except FileNotFoundError:
+        raise HTTPException(404, "File not found")
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.get("/trash/archive")
+async def list_archive():
+    try:
+        return await fs.list_archive()
     except OSError as e:
         raise HTTPException(500, str(e))

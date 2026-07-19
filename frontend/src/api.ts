@@ -53,3 +53,12 @@ export async function restoreTrash(name: string): Promise<void> {
 export async function emptyTrash(): Promise<void> {
   await api.delete('/files/trash')
 }
+
+export async function listArchive(): Promise<{ name: string; deleted_at: string }[]> {
+  const res = await api.get('/files/trash/archive')
+  return res.data
+}
+
+export function getFileUrl(path: string): string {
+  return `/api/files/download?path=${encodeURIComponent(path)}`
+}

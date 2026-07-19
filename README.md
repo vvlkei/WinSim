@@ -22,37 +22,43 @@ WinSim/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Desktop.tsx        # 桌面背景、图标、右键菜单换壁纸
-│   │   │   ├── Taskbar.tsx        # 底部任务栏 + 开始菜单
-│   │   │   ├── Window.tsx         # 可拖拽/缩放/最小化的窗口组件
-│   │   │   └── FileExplorer.tsx   # 文件管理器
+│   │   │   ├── Desktop.tsx          # 桌面背景、图标
+│   │   │   ├── Taskbar.tsx          # 底部任务栏 + 开始菜单 + 设置弹窗 + 用户信息弹窗
+│   │   │   ├── Window.tsx           # 可拖拽/缩放/最小化的窗口组件
+│   │   │   ├── FileExplorer.tsx     # 文件管理器
+│   │   │   ├── FilePreview.tsx      # 文件预览
+│   │   │   ├── TrashView.tsx        # 回收站视图
+│   │   │   ├── Toast.tsx            # Toast 通知
+│   │   │   ├── ConfirmDialog.tsx    # 确认对话框
+│   │   │   └── ThemeProvider.tsx    # 颜色模式主题提供者
 │   │   ├── store/
-│   │   │   └── desktopStore.ts    # Zustand 全局状态
-│   │   ├── types.ts               # TypeScript 类型定义
-│   │   ├── api.ts                 # Axios API 请求层
-│   │   ├── App.tsx                # 根组件
-│   │   ├── main.tsx               # 入口文件
-│   │   └── index.css              # Tailwind + 全局样式
+│   │   │   └── desktopStore.ts      # Zustand 全局状态
+│   │   ├── types.ts                 # TypeScript 类型定义
+│   │   ├── api.ts                   # Axios API 请求层
+│   │   ├── App.tsx                  # 根组件
+│   │   ├── main.tsx                 # 入口文件
+│   │   └── index.css                # Tailwind + 全局样式
 │   ├── index.html
-│   ├── vite.config.ts             # Vite 配置（含 API 代理）
+│   ├── vite.config.ts               # Vite 配置（含 API 代理）
 │   ├── tailwind.config.js
 │   ├── postcss.config.js
 │   └── package.json
 │
 ├── backend/
-│   ├── main.py                    # FastAPI 入口（端口 3001）
+│   ├── main.py                      # FastAPI 入口（端口 3001）
 │   ├── routes/
-│   │   └── files.py               # 文件 CRUD REST 路由
+│   │   └── files.py                 # 文件 CRUD REST 路由
 │   ├── utils/
-│   │   └── file_system.py         # 文件系统操作（含路径穿越防护）
+│   │   └── file_system.py           # 文件系统操作（含路径穿越防护）
 │   ├── requirements.txt
-│   └── files/                     # 运行时自动生成的存储目录
+│   └── files/                       # 运行时自动生成的存储目录
 │       ├── home/
 │       │   ├── documents/
 │       │   └── projects/
 │       └── wallpapers/
 │
 ├── package.json
+├── DESIGN.md
 └── README.md
 ```
 
@@ -63,9 +69,13 @@ WinSim/
 - **文件管理器** — 图标网格视图、面包屑导航、右键上下文菜单
 - **文件操作** — 新建文件夹/文件（下拉选择类型）、重命名、删除（移入回收站）
 - **回收站** — 列表视图、还原文件、清空回收站
-- **自定义壁纸** — 右键桌面 → Choose Wallpaper / Remove Wallpaper，支持 localStorage 持久化
+- **开始菜单** — 搜索框、最近打开项目（4×3 网格）、用户信息弹窗、设置弹窗
+- **设置弹窗** — 颜色模式（跟随系统/白天/黑夜）、自定义壁纸上传+预览
+- **深色模式** — 全局适配所有组件，切换过渡动画 0.5s
+- **自定义壁纸** — 通过设置弹窗上传，支持预览，localStorage 持久化
 - **加载状态** — 文件目录切换时显示 Loading 动画
 - **Win11 风格** — 窗口控件居右、扁平标题栏、居中任务栏、毛玻璃开始菜单
+- **最近打开** — 自动记录打开的文件，LocalStorage 持久化
 - **安全防护** — 路径穿越检测、文件重命名注入防护、上传大小限制（10MB）
 - **后端 API** — 完整的 REST 接口，文件存储于本地文件系统
 
@@ -109,6 +119,21 @@ npm run dev:backend    # 仅后端 (uvicorn)
 | DELETE | `/api/files/trash` | 清空回收站 |
 
 ## 更新日志
+
+### 2026-07-19 — v1.3.0
+
+- 新增：**开始菜单搜索框** — 搜索文档，Enter 打开搜索结果
+- 新增：**最近打开项目** — 4×3 网格展示，支持展开更多，LocalStorage 持久化
+- 新增：**用户信息弹窗** — 显示用户 ID、用户名、修改密码
+- 新增：**设置弹窗** — 颜色模式（跟随系统/白天/黑夜）、桌面背景设置（默认/自定义）
+- 新增：**壁纸预览** — 上传后显示缩略图预览，确认后应用
+- 新增：**深色模式** — 全局适配所有组件（任务栏、开始菜单、弹窗、窗口、文件管理器等）
+- 新增：**主题切换过渡** — 0.5s CSS transition 动画
+- 新增：**最近打开自动记录** — 双击文件或预览时自动记录
+- 新增：**ThemeProvider** — 管理颜色模式切换
+- 移除：桌面右键壁纸菜单（改为设置弹窗操作）
+- 修复：任务栏重复 New Folder 按钮
+- 优化：任务栏窗口按钮深色模式适配
 
 ### 2026-07-18 — v1.2.0
 

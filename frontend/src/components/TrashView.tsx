@@ -1,109 +1,142 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Folder, File, Trash2, RotateCcw, AlertTriangle } from 'lucide-react'
+import { Folder, File, Trash2, RotateCcw, RefreshCw } from 'lucide-react'
 import type { TrashEntry } from '../types'
-import { listTrash, restoreTrash, emptyTrash } from '../api'
+import { listTrash, restoreTrash, emptyTrash, listArchive } from '../api'
+import { useToast } from './Toast'
 
-const fileIcon = (entry: TrashEntry) => {
-  if (entry.type === 'directory') return <Folder size={18} className="text-yellow-500 shrink-0" />
-  return <File size={18} className="text-gray-500 shrink-0" />
+const fileIcon = (entry: TrashEntry, isArchive = false) => {
+  const cls = isArchive ? 'text-gray-300' : 'text-yellow-500'
+  const cls2 = isArchive ? 'text-gray-300' : 'text-gray-400'
+  if (entry.type === 'directory') return <Folder size={16} className={`${cls} shrink-0`} />
+  return <File size={16} className={`${cls2} shrink-0`} />
 }
 
 export default function TrashView() {
   const [entries, setEntries] = useState<TrashEntry[]>([])
+  const [archive, setArchive] = useState<{ name: string; deleted_at: string }[]>([])
   const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      setEntries(await listTrash())
+      const [items, archived] = await Promise.all([listTrash(), listArchive()])
+      setEntries(items)
+      setArchive(archived)
     } catch {
       setEntries([])
+      setArchive([])
     }
     setLoading(false)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+    const interval = setInterval(load, 3000)
+    return () => clearInterval(interval)
+  }, [load])
 
   const handleRestore = async (name: string) => {
     try {
       await restoreTrash(name)
       load()
     } catch {
-      alert('Failed to restore')
+      toast('Failed to restore')
     }
   }
 
   const handleEmpty = async () => {
-    if (!confirm('Permanently delete all items in trash?')) return
     try {
       await emptyTrash()
       load()
     } catch {
-      alert('Failed to empty trash')
+      toast('Failed to empty trash')
     }
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-win-light border-b border-gray-300 text-xs">
+    <div className="h-full flex flex-col bg-white dark:bg-[#2d2d2d]">
+      <div className="flex items-center gap-3 px-6 py-2 border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Trash</span>
+        <div className="flex-1" />
+        {entries.length > 0 && (
+          <button
+            onClick={handleEmpty}
+            className="text-xs text-red-500 hover:text-red-700 hover:underline transition-colors"
+          >
+            Empty trash
+          </button>
+        )}
         <button
-          onClick={handleEmpty}
-          disabled={entries.length === 0}
-          className={`flex items-center gap-1 px-2 py-1 rounded ${
-            entries.length ? 'hover:bg-gray-200 text-red-600' : 'text-gray-300 cursor-not-allowed'
-          }`}
+          onClick={load}
+          className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
-          <Trash2 size={14} /> Empty Trash
+          <RefreshCw size={12} /> Refresh
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto p-2">
+      <div className="flex-1 overflow-auto">
         {loading ? (
-          <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-            Loading...
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400 text-sm gap-2">
-            <AlertTriangle size={16} /> Trash is empty
-          </div>
+          <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
         ) : (
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-200">
-                <th className="pb-1 font-medium">Name</th>
-                <th className="pb-1 font-medium">Original Path</th>
-                <th className="pb-1 font-medium">Type</th>
-                <th className="pb-1 font-medium">Size</th>
-                <th className="pb-1 font-medium" />
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr key={entry.name} className="hover:bg-gray-50">
-                  <td className="py-1.5 flex items-center gap-2">
-                    {fileIcon(entry)}
-                    <span className="truncate max-w-[180px]">{entry.name}</span>
-                  </td>
-                  <td className="py-1.5 text-gray-500 truncate max-w-[200px]">{entry.original_path}</td>
-                  <td className="py-1.5 text-gray-500">{entry.type}</td>
-                  <td className="py-1.5 text-gray-500">{entry.size ?? '-'}</td>
-                  <td className="py-1.5">
-                    <button
-                      onClick={() => handleRestore(entry.name)}
-                      className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200 text-win-blue"
+          <div className="px-6 py-4">
+            {entries.length > 0 && (
+              <>
+                <h2 className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                  Recently deleted ({entries.length})
+                </h2>
+                <div className="space-y-0.5 mb-8">
+                  {entries.map((entry) => (
+                    <div
+                      key={entry.name}
+                      className="group flex items-center gap-3 px-3 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-[#3d3d3d] transition-colors"
                     >
-                      <RotateCcw size={12} /> Restore
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      {fileIcon(entry)}
+                      <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">
+                        {entry.original_path || entry.name}
+                      </span>
+                      <button
+                        onClick={() => handleRestore(entry.name)}
+                        className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-0.5 text-xs text-gray-400 dark:text-gray-500 hover:text-win-blue transition-all"
+                      >
+                        <RotateCcw size={11} /> Restore
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {archive.length > 0 && (
+              <>
+                <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-3">
+                  Archive (cannot be recovered) ({archive.length})
+                </h2>
+                <div className="space-y-0.5 mb-8">
+                  {archive.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 px-3 py-1.5"
+                    >
+                      <File size={16} className="text-gray-200 dark:text-gray-600 shrink-0" />
+                      <span className="flex-1 text-sm text-gray-300 dark:text-gray-500 truncate">{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {entries.length === 0 && archive.length === 0 && (
+              <div className="flex items-center justify-center h-48 text-gray-400 dark:text-gray-500 text-sm">
+                Trash is empty
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      <div className="flex items-center px-3 py-1 bg-win-light border-t border-gray-300 text-xs text-gray-600">
-        {entries.length} item{entries.length !== 1 && 's'}
+      <div className="px-6 py-2 border-t border-gray-100 dark:border-gray-700 text-[11px] text-gray-400 dark:text-gray-500">
+        Files will never actually be deleted permanently because Internet Archive.
       </div>
     </div>
   )

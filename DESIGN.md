@@ -14,21 +14,44 @@
 
 #### 桌面
 - [x] Windows 风格桌面背景（渐变色 / 自定义壁纸）
-- [x] 桌面图标（File Explorer / Projects / Terminal / Trash）
+- [x] 桌面图标（File Explorer / Projects / Trash）
 - [x] 底部任务栏 + 开始菜单
 - [x] 窗口拖拽移动、缩放
 - [x] 窗口最小化 / 最大化 / 关闭、焦点切换
-- [x] 右键桌面 → Choose / Remove Wallpaper
+
+#### 开始菜单
+- [x] 搜索框 — 全局搜索文档
+- [x] 最近打开的项目 — 4×3 网格图标展示，支持展开更多
+- [x] 用户头像 — 点击弹出用户信息弹窗（用户 ID / 用户名 / 修改密码）
+- [x] 设置按钮 — 点击弹出设置弹窗
+- [x] 搜索框与最近项目区域无分割线，浅色风格，底部用户区域颜色稍深
+
+#### 设置弹窗
+- [x] 颜色模式 — 跟随系统 / 白天 / 黑夜
+- [x] 桌面背景 — 显示默认图片 / 自定义上传
+- [x] 壁纸预览 — 上传后显示缩略图预览，确认后应用
+
+#### 用户信息弹窗
+- [x] 用户 ID 显示
+- [x] 用户名显示
+- [x] 修改密码（前端交互）
+
+#### 颜色模式
+- [x] 深色/浅色模式切换，全局生效
+- [x] 任务栏、开始菜单、弹窗、窗口、文件管理器等全部组件适配深色模式
+- [x] 跟随系统 / 白天 / 黑夜三种模式
+- [x] 切换时 0.5s CSS 过渡动画
 
 #### 文件管理器
 - [x] 图标网格视图
 - [x] 面包屑导航
-- [x] 新建文件夹 / 文件
+- [x] 新建文件夹 / 文件（下拉选择类型 txt/md/json/html/css/js）
 - [x] 重命名（内联编辑）
 - [x] 删除（工具栏按钮 / 右键菜单 / Delete 键）
 - [x] 右键上下文菜单
 - [x] 状态栏（文件计数）
 - [x] Loading 加载状态
+- [x] 最近打开自动记录
 
 #### 后端
 - [x] 文件 CRUD API
@@ -41,7 +64,6 @@
 ### ❌ 待实现
 
 #### 桌面体验
-- [ ] **回收站** — Trash 图标无功能，删除直接永久
 - [ ] **桌面放置文件** — 不能直接在桌面放文件或文件夹
 - [ ] **桌面图标排列** — 无自动排列 / 对齐网格
 - [ ] **右键桌面刷新** — 桌面无刷新菜单
@@ -50,7 +72,7 @@
 - [ ] **系统托盘** — 右下角无通知区域图标
 
 #### 文件管理器
-- [ ] **文件预览 / 打开** — 双击文件无反应（readFile API 已存在但 UI 未接入）
+- [ ] **文件预览增强** — Markdown / 图片 / 文本渲染
 - [ ] **多选** — 不支持 Ctrl / Shift 多选
 - [ ] **拖拽移动文件** — 不能跨文件夹拖拽
 - [ ] **搜索 / 筛选** — 无搜索框，无类型过滤
@@ -68,13 +90,11 @@
 - [ ] **注册 / 登录系统** — JWT + 密码哈希
 - [ ] **登录界面** — 独立登录页面
 - [ ] **用户切换 / 锁屏** — 开始菜单无关机 / 锁屏选项
-- [ ] **设置面板** — 无系统设置 UI
 - [ ] **通知中心** — 无右下角通知区域
 - [ ] **中英文切换** — 全英文 UI
 - [ ] **聊天系统** — WebSocket 在线聊天室
 - [ ] **论坛模式** — 分类 / 帖子 / 评论
 - [ ] **全局检索** — 搜索文件 / 帖子 / 消息
-- [ ] **文件预览** — Markdown / 图片 / 文本渲染
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -229,60 +249,47 @@ WebSocket: ws://localhost:3001/ws/chat/{room}
 
 ---
 
-## 项目目录结构（建议）
+## 项目目录结构
 
 ```
 WinSim/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/        # 通用组件
-│   │   ├── pages/             # 页面级组件
-│   │   │   ├── LoginPage.tsx
-│   │   │   ├── DesktopPage.tsx
-│   │   │   ├── ChatPage.tsx
-│   │   │   ├── ForumPage.tsx
-│   │   │   ├── ThreadPage.tsx
-│   │   │   └── SearchPage.tsx
-│   │   ├── store/             # Zustand stores
-│   │   │   ├── desktopStore.ts
-│   │   │   ├── authStore.ts
-│   │   │   └── chatStore.ts
-│   │   ├── api/               # API 请求层
-│   │   │   ├── client.ts      # Axios instance + interceptors
-│   │   │   ├── auth.ts
-│   │   │   ├── files.ts
-│   │   │   ├── chat.ts
-│   │   │   ├── forum.ts
-│   │   │   └── search.ts
-│   │   ├── hooks/
-│   │   ├── types/
-│   │   ├── App.tsx            # Router + Auth guard
-│   │   └── main.tsx
-│   └── vite.config.ts
+│   │   │   ├── Desktop.tsx          # 桌面背景、图标
+│   │   │   ├── Taskbar.tsx          # 底部任务栏 + 开始菜单 + 设置弹窗 + 用户信息弹窗
+│   │   │   ├── Window.tsx           # 可拖拽/缩放/最小化的窗口组件
+│   │   │   ├── FileExplorer.tsx     # 文件管理器
+│   │   │   ├── FilePreview.tsx      # 文件预览
+│   │   │   ├── TrashView.tsx        # 回收站视图
+│   │   │   ├── Toast.tsx            # Toast 通知
+│   │   │   ├── ConfirmDialog.tsx    # 确认对话框
+│   │   │   └── ThemeProvider.tsx    # 颜色模式主题提供者
+│   │   ├── store/
+│   │   │   └── desktopStore.ts      # Zustand 全局状态
+│   │   ├── types.ts                 # TypeScript 类型定义
+│   │   ├── api.ts                   # Axios API 请求层
+│   │   ├── App.tsx                  # 根组件
+│   │   ├── main.tsx                 # 入口文件
+│   │   └── index.css                # Tailwind + 全局样式
+│   ├── index.html
+│   ├── vite.config.ts               # Vite 配置（含 API 代理）
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   └── package.json
 │
 ├── backend/
-│   ├── main.py                # FastAPI app + lifespan + CORS
-│   ├── database.py            # SQLAlchemy engine + session
-│   ├── models/                # ORM models
-│   │   ├── user.py
-│   │   ├── chat.py
-│   │   └── forum.py
+│   ├── main.py                      # FastAPI 入口（端口 3001）
 │   ├── routes/
-│   │   ├── auth.py            # /api/auth/register, /login
-│   │   ├── files.py           # /api/files/*
-│   │   ├── chat.py            # /api/chat/* + WebSocket
-│   │   ├── forum.py           # /api/forum/*
-│   │   ├── search.py          # /api/search
-│   │   └── wallpaper.py       # /api/wallpaper
-│   ├── services/              # 业务逻辑
-│   │   ├── auth_service.py
-│   │   ├── chat_service.py
-│   │   └── forum_service.py
+│   │   └── files.py                 # 文件 CRUD REST 路由
 │   ├── utils/
-│   │   ├── file_system.py
-│   │   ├── jwt.py
-│   │   └── password.py
-│   └── requirements.txt
+│   │   └── file_system.py           # 文件系统操作（含路径穿越防护）
+│   ├── requirements.txt
+│   └── files/                       # 运行时自动生成的存储目录
+│       ├── home/
+│       │   ├── documents/
+│       │   └── projects/
+│       └── wallpapers/
 │
 ├── package.json
 ├── DESIGN.md
@@ -295,9 +302,11 @@ WinSim/
 
 | 阶段 | 功能 | 预估 |
 |---|---|---|
-| Phase 1 | **注册/登录系统** + JWT + 路由守卫 | 基础，先做 |
-| Phase 2 | **登录界面**（从桌面分离出独立登录页） | Phase 1 后自然完成 |
-| Phase 3 | **聊天系统** WebSocket + 房间 + 历史 | 中等 |
-| Phase 4 | **论坛模式** 分类/帖子/评论 CRUD | 中等 |
-| Phase 5 | **文件预览** Markdown 渲染 | 简单 |
-| Phase 6 | **全局检索** 搜索文件/帖子/消息 | 依赖前几阶段 |
+| Phase 1 | **开始菜单增强** — 搜索框、最近项目、用户信息、设置弹窗 | ✅ 已完成 |
+| Phase 2 | **颜色模式** — 深色/浅色模式、全局适配、切换动画 | ✅ 已完成 |
+| Phase 3 | **注册/登录系统** + JWT + 路由守卫 | 基础，先做 |
+| Phase 4 | **登录界面**（从桌面分离出独立登录页） | Phase 3 后自然完成 |
+| Phase 5 | **聊天系统** WebSocket + 房间 + 历史 | 中等 |
+| Phase 6 | **论坛模式** 分类/帖子/评论 CRUD | 中等 |
+| Phase 7 | **文件预览** Markdown 渲染 | 简单 |
+| Phase 8 | **全局检索** 搜索文件/帖子/消息 | 依赖前几阶段 |

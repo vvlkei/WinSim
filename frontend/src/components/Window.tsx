@@ -93,19 +93,19 @@ export default function Window({
       }}
       onMouseDown={handleMouseDown}
     >
-      <div className="flex flex-col h-full bg-white rounded-lg overflow-hidden shadow-2xl border border-gray-200">
+      <div className="flex flex-col h-full bg-white dark:bg-[#2d2d2d] rounded-lg overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
         <div
-          className="flex items-center h-9 bg-white select-none"
+          className="flex items-center h-9 bg-white dark:bg-[#333333] select-none"
           onMouseDown={handleTitleMouseDown}
           onDoubleClick={() => maximizeWindow(id)}
         >
-          <span className="flex-1 pl-4 text-[12px] text-gray-800 font-semibold truncate">
+          <span className="flex-1 pl-4 text-[12px] text-gray-800 dark:text-gray-200 font-semibold truncate">
             {title}
           </span>
           <div className="flex h-full">
             <button
               onClick={(e) => { e.stopPropagation(); minimizeWindow(id) }}
-              className="w-11 h-full flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
+              className="w-11 h-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-[#4d4d4d] text-gray-600 dark:text-gray-400 transition-colors"
             >
               <svg viewBox="0 0 10 10" width="10" height="10" fill="currentColor">
                 <rect x="0" y="4.5" width="10" height="1" rx="0.5" />
@@ -113,7 +113,7 @@ export default function Window({
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); maximizeWindow(id) }}
-              className="w-11 h-full flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
+              className="w-11 h-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-[#4d4d4d] text-gray-600 dark:text-gray-400 transition-colors"
             >
               <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.2">
                 <rect x="1.5" y="1.5" width="7" height="7" rx="1" />
@@ -121,7 +121,7 @@ export default function Window({
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
-              className="w-11 h-full flex items-center justify-center hover:bg-[#E81123] hover:text-white text-gray-600 transition-colors"
+              className="w-11 h-full flex items-center justify-center hover:bg-[#E81123] hover:text-white text-gray-600 dark:text-gray-400 transition-colors"
             >
               <svg viewBox="0 0 10 10" width="10" height="10" fill="currentColor">
                 <path d="M1.5 1.5l7 7m-7 0l7-7" stroke="currentColor" strokeWidth="1.5" fill="none" />
@@ -129,7 +129,7 @@ export default function Window({
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-hidden bg-white">
+        <div className="flex-1 overflow-hidden bg-white dark:bg-[#2d2d2d]">
           {children}
         </div>
         <div className="window-resize-handle" onMouseDown={handleResizeMouseDown} />

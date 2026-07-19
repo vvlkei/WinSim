@@ -26,11 +26,26 @@ export interface WindowState {
   props?: Record<string, unknown>
 }
 
+export interface RecentItem {
+  name: string
+  path: string
+  timestamp: number
+}
+
+export type ColorMode = 'system' | 'light' | 'dark'
+
 export interface DesktopState {
   windows: WindowState[]
   nextZIndex: number
   startMenuOpen: boolean
   wallpaper: string | null
+  recentItems: RecentItem[]
+  settingsOpen: boolean
+  userInfoOpen: boolean
+  colorMode: ColorMode
+  searchQuery: string
+  setSearchQuery: (q: string) => void
+  addRecentItem: (item: RecentItem) => void
   openWindow: (component: string, title: string, props?: Record<string, unknown>) => void
   closeWindow: (id: string) => void
   minimizeWindow: (id: string) => void
@@ -41,4 +56,9 @@ export interface DesktopState {
   toggleStartMenu: () => void
   closeStartMenu: () => void
   setWallpaper: (path: string | null) => void
+  toggleSettings: () => void
+  closeSettings: () => void
+  toggleUserInfo: () => void
+  closeUserInfo: () => void
+  setColorMode: (mode: ColorMode) => void
 }

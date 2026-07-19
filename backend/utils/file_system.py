@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import datetime
 import shutil
+import json
 
 ROOT = Path("files").resolve()
 TRASH_DIR = ROOT / "trash"
@@ -67,6 +68,10 @@ async def write_file(user_path: str, content: str):
     target.write_text(content, encoding="utf-8")
 
 
+async def resolve_path(user_path: str) -> str:
+    return str(_sanitize(user_path))
+
+
 async def list_trash() -> list[dict]:
     TRASH_DIR.mkdir(exist_ok=True)
     entries = []
@@ -105,8 +110,31 @@ async def restore_from_trash(trash_name: str):
 
 async def empty_trash():
     TRASH_DIR.mkdir(exist_ok=True)
-    for f in TRASH_DIR.iterdir():
+    archive = {}
+    for f in list(TRASH_DIR.iterdir()):
+        if f.suffix == ".meta":
+            original = f.read_text(encoding="utf-8").strip()
+            archive[f.stem] = original
+            f.unlink()
+    for f in list(TRASH_DIR.iterdir()):
+        display = archive.get(f.name, f.name)
         if f.is_dir():
             shutil.rmtree(f)
         else:
             f.unlink()
+    if archive:
+        archive_file = TRASH_DIR / "archive.json"
+        existing = []
+        if archive_file.exists():
+            existing = json.loads(archive_file.read_text(encoding="utf-8"))
+        items = [{"name": display, "deleted_at": datetime.now().isoformat()} for display in archive.values()]
+        existing = items + existing
+        archive_file.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+async def list_archive() -> list[dict]:
+    TRASH_DIR.mkdir(exist_ok=True)
+    archive_file = TRASH_DIR / "archive.json"
+    if archive_file.exists():
+        return json.loads(archive_file.read_text(encoding="utf-8"))
+    return []

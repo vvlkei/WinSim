@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Folder, File, FileText, Image, Music, Video, ChevronRight, Plus, Trash2, Edit3, Loader2, ChevronDown } from 'lucide-react'
 import type { FileEntry } from '../types'
 import { listFiles, createFile, deleteFile, renameFile } from '../api'
+import useDesktopStore from '../store/desktopStore'
+import { useToast } from './Toast'
+import { useConfirm } from './ConfirmDialog'
 
 interface Props {
   initialPath?: string
@@ -37,6 +40,8 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
   const [loading, setLoading] = useState(false)
   const [newFileMenu, setNewFileMenu] = useState(false)
   const newFileBtnRef = useRef<HTMLButtonElement>(null)
+  const { toast } = useToast()
+  const { confirm } = useConfirm()
 
   const FILE_TYPES: { ext: string; label: string }[] = [
     { ext: 'txt', label: 'Text File (.txt)' },
@@ -71,8 +76,15 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
   }
 
   const handleDoubleClick = (entry: FileEntry) => {
+    const store = useDesktopStore.getState()
+    store.addRecentItem({ name: entry.name, path: entry.path, timestamp: Date.now() })
     if (entry.type === 'directory') {
       navigateTo(entry.path)
+    } else {
+      store.openWindow('filePreview', entry.name, {
+        filePath: entry.path,
+        fileName: entry.name,
+      })
     }
   }
 
@@ -95,7 +107,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
       await loadFiles(currentPath)
       startRename(fullPath, name)
     } catch {
-      alert('Failed to create folder')
+      toast('Failed to create folder')
     }
     setContextMenu(null)
   }
@@ -108,7 +120,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
       await loadFiles(currentPath)
       startRename(fullPath, name)
     } catch {
-      alert('Failed to create file')
+      toast('Failed to create file')
     }
     setContextMenu(null)
     setNewFileMenu(false)
@@ -130,13 +142,14 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
   const selectedEntry = entries.find(e => e.path === selected)
 
   const handleDeleteEntry = async (path: string, name: string) => {
-    if (!confirm(`Move "${name}" to trash?`)) return
+    const ok = await confirm({ message: `Move "${name}" to trash?`, title: 'Delete' })
+    if (!ok) return
     try {
       await deleteFile(path)
       if (selected === path) setSelected(null)
       loadFiles(currentPath)
     } catch {
-      alert('Failed to delete')
+      toast('Failed to delete')
     }
   }
 
@@ -164,24 +177,18 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
       await renameFile(oldPath, renameValue.trim())
       loadFiles(currentPath)
     } catch {
-      alert('Failed to rename')
+      toast('Failed to rename')
     }
     setRenaming(null)
   }
 
   return (
-    <div className="h-full flex flex-col bg-white" onClick={() => { setContextMenu(null); setNewFileMenu(false) }} onKeyDown={handleKeyDown} tabIndex={-1}>
+    <div className="h-full flex flex-col bg-white dark:bg-[#2d2d2d]" onClick={() => { setContextMenu(null); setNewFileMenu(false) }} onKeyDown={handleKeyDown} tabIndex={-1}>
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-win-light border-b border-gray-300 text-xs">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-win-light dark:bg-[#333] border-b border-gray-300 dark:border-gray-700 text-xs dark:text-gray-300">
         <button
           onClick={handleNewFolder}
-          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
-        >
-          <Plus size={14} /> New Folder
-        </button>
-        <button
-          onClick={handleNewFolder}
-          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
+          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-[#4d4d4d]"
         >
           <Plus size={14} /> New Folder
         </button>
@@ -189,20 +196,20 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
           <button
             ref={newFileBtnRef}
             onClick={() => setNewFileMenu(!newFileMenu)}
-            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
+            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-[#4d4d4d]"
           >
             <Plus size={14} /> New File <ChevronDown size={10} />
           </button>
           {newFileMenu && (
             <div
-              className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 py-1 min-w-[160px]"
+              className="absolute top-full left-0 mt-1 bg-white dark:bg-[#3d3d3d] border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50 py-1 min-w-[160px]"
               onClick={(e) => e.stopPropagation()}
             >
               {FILE_TYPES.map((t) => (
                 <button
                   key={t.ext}
                   onClick={() => handleNewFile(t.ext)}
-                  className="w-full text-left px-3 py-1.5 hover:bg-gray-100 text-xs"
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-[#4d4d4d] text-xs dark:text-gray-300"
                 >
                   {t.label}
                 </button>
@@ -210,14 +217,14 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
             </div>
           )}
         </div>
-        <div className="w-px h-4 bg-gray-300 mx-1" />
+        <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
         <button
           onClick={handleDeleteSelected}
           disabled={!selected}
           className={`flex items-center gap-1 px-2 py-1 rounded ${
             selected
-              ? 'hover:bg-gray-200 text-red-600'
-              : 'text-gray-300 cursor-not-allowed'
+              ? 'hover:bg-gray-200 dark:hover:bg-[#4d4d4d] text-red-600'
+              : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
           }`}
         >
           <Trash2 size={14} /> Delete
@@ -225,13 +232,13 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
       </div>
 
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 border-b border-gray-300 text-xs text-gray-600">
+      <div className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 dark:bg-[#383838] border-b border-gray-300 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
         {breadcrumbs.map((part, idx) => (
           <span key={idx} className="flex items-center gap-1">
             {idx > 0 && <ChevronRight size={12} />}
             <button
               onClick={() => navigateTo('/' + breadcrumbs.slice(0, idx + 1).join('/'))}
-              className="px-1.5 py-0.5 rounded hover:bg-gray-200"
+              className="px-1.5 py-0.5 rounded hover:bg-gray-200 dark:hover:bg-[#4d4d4d]"
             >
               {part}
             </button>
@@ -245,11 +252,11 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
         onContextMenu={(e) => handleContextMenu(e, null)}
       >
         {loading ? (
-          <div className="flex items-center justify-center h-full text-gray-400 text-sm gap-2">
+          <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm gap-2">
             <Loader2 size={16} className="animate-spin" /> Loading...
           </div>
         ) : entries.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+          <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
             This folder is empty
           </div>
         ) : (
@@ -258,7 +265,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
               <div
                 key={entry.path}
                 className={`file-icon flex flex-col items-center gap-1 p-2 rounded cursor-pointer
-                  ${selected === entry.path ? 'selected' : 'hover:bg-gray-100'}`}
+                  ${selected === entry.path ? 'selected' : 'hover:bg-gray-100 dark:hover:bg-[#3d3d3d]'}`}
                 onClick={() => setSelected(entry.path)}
                 onDoubleClick={() => handleDoubleClick(entry)}
                 onContextMenu={(e) => handleContextMenu(e, entry)}
@@ -268,7 +275,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
                 </div>
                 {renaming === entry.path ? (
                   <input
-                    className="w-full text-[11px] text-center border border-win-blue outline-none px-1 rounded"
+                    className="w-full text-[11px] text-center border border-win-blue outline-none px-1 rounded dark:bg-[#3d3d3d] dark:text-gray-200"
                     value={renameValue}
                     onChange={(e) => setRenameValue(e.target.value)}
                     onBlur={() => handleRenameSubmit(entry.path)}
@@ -280,7 +287,7 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <span className="text-[11px] text-center leading-tight break-all line-clamp-2">
+                  <span className="text-[11px] text-center leading-tight break-all line-clamp-2 dark:text-gray-300">
                     {entry.name}
                   </span>
                 )}
@@ -291,14 +298,14 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
       </div>
 
       {/* Status bar */}
-      <div className="flex items-center px-3 py-1 bg-win-light border-t border-gray-300 text-xs text-gray-600">
+      <div className="flex items-center px-3 py-1 bg-win-light dark:bg-[#333] border-t border-gray-300 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
         {entries.length} item{entries.length !== 1 && 's'}
       </div>
 
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed bg-white border border-gray-300 shadow-xl rounded py-1 z-[9999] text-sm min-w-[160px]"
+          className="fixed bg-white dark:bg-[#3d3d3d] border border-gray-300 dark:border-gray-600 shadow-xl rounded py-1 z-[9999] text-sm min-w-[160px] dark:text-gray-200"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -314,10 +321,10 @@ export default function FileExplorer({ initialPath = HOME_PATH }: Props) {
           )}
           {contextMenu.entry && (
             <>
-              <button onClick={() => { alert(`Path: ${contextMenu.entry!.path}`); setContextMenu(null) }} className="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-win-blue hover:text-white">
+              <button onClick={() => { toast(`Path: ${contextMenu.entry!.path}`, 'info'); setContextMenu(null) }} className="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-win-blue hover:text-white">
                 Properties
               </button>
-              <div className="border-t border-gray-200 my-1" />
+              <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
               <button onClick={handleRenameStart} className="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-win-blue hover:text-white">
                 <Edit3 size={14} /> Rename
               </button>
