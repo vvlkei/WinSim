@@ -1,5 +1,5 @@
 {
-  "name": "pixel-desktop",
+  "name": "winsim",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",

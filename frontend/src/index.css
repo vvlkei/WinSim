@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --desktop-bg: linear-gradient(135deg, #0d1b2a 0%, #1b2838 50%, #2d4a6b 100%);
+}
+
 body {
   margin: 0;
   overflow: hidden;
@@ -11,6 +15,23 @@ body {
 #root {
   width: 100vw;
   height: 100vh;
+}
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.2s ease-out;
+}
+
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: all 0.5s ease-in-out !important;
+  transition-delay: 0 !important;
 }
 
 ::-webkit-scrollbar {
@@ -30,6 +51,30 @@ body {
   background: #555;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+.taskbar-btn {
+  background: transparent;
+}
+.taskbar-btn:hover,
+.taskbar-btn.active {
+  background: #E8E8E8;
+}
+
+.dark .taskbar-btn {
+  background: transparent;
+}
+.dark .taskbar-btn:hover,
+.dark .taskbar-btn.active {
+  background: #4d4d4d;
+}
+
 .window-resize-handle {
   position: absolute;
   bottom: 0;
@@ -46,4 +91,8 @@ body {
 .file-icon.selected {
   background: rgba(0, 120, 215, 0.2);
   outline: 1px solid #0078D7;
+}
+
+.dark .file-icon.selected {
+  background: rgba(0, 120, 215, 0.3);
 }

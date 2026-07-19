@@ -1,5 +1,4 @@
-import { type ReactNode, useRef, useCallback, useState } from 'react'
-import { X, Minus, Square } from 'lucide-react'
+import { type ReactNode, useRef, useCallback, useState, useEffect } from 'react'
 import useDesktopStore from '../store/desktopStore'
 
 interface Props {
@@ -24,6 +23,9 @@ export default function Window({
   const resizeRef = useRef<{ startX: number; startY: number; w: number; h: number } | null>(null)
   const [pos, setPos] = useState({ x, y })
   const [size, setSize] = useState({ width, height })
+
+  useEffect(() => { setPos({ x, y }) }, [x, y])
+  useEffect(() => { setSize({ width, height }) }, [width, height])
 
   const curX = maximized ? 0 : pos.x
   const curY = maximized ? 0 : pos.y
@@ -91,28 +93,43 @@ export default function Window({
       }}
       onMouseDown={handleMouseDown}
     >
-      <div className="flex flex-col h-full bg-white rounded-t-lg overflow-hidden shadow-2xl border border-win-border">
+      <div className="flex flex-col h-full bg-white dark:bg-[#2d2d2d] rounded-lg overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
         <div
-          className="flex items-center h-9 bg-gradient-to-r from-win-blue to-win-title px-2 select-none"
+          className="flex items-center h-9 bg-white dark:bg-[#333333] select-none"
           onMouseDown={handleTitleMouseDown}
           onDoubleClick={() => maximizeWindow(id)}
         >
-          <div className="flex gap-1.5">
-            <button onClick={() => closeWindow(id)} className="w-3.5 h-3.5 rounded-full bg-[#E81123] hover:brightness-110 flex items-center justify-center">
-              <X size={8} className="text-white opacity-0 hover:opacity-100" />
-            </button>
-            <button onClick={() => minimizeWindow(id)} className="w-3.5 h-3.5 rounded-full bg-[#F5A623] hover:brightness-110 flex items-center justify-center">
-              <Minus size={8} className="text-white opacity-0 hover:opacity-100" />
-            </button>
-            <button onClick={() => maximizeWindow(id)} className="w-3.5 h-3.5 rounded-full bg-[#34C74A] hover:brightness-110 flex items-center justify-center">
-              <Square size={7} className="text-white opacity-0 hover:opacity-100" />
-            </button>
-          </div>
-          <span className="flex-1 text-center text-white text-sm font-medium tracking-wide mr-14 truncate">
+          <span className="flex-1 pl-4 text-[12px] text-gray-800 dark:text-gray-200 font-semibold truncate">
             {title}
           </span>
+          <div className="flex h-full">
+            <button
+              onClick={(e) => { e.stopPropagation(); minimizeWindow(id) }}
+              className="w-11 h-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-[#4d4d4d] text-gray-600 dark:text-gray-400 transition-colors"
+            >
+              <svg viewBox="0 0 10 10" width="10" height="10" fill="currentColor">
+                <rect x="0" y="4.5" width="10" height="1" rx="0.5" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); maximizeWindow(id) }}
+              className="w-11 h-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-[#4d4d4d] text-gray-600 dark:text-gray-400 transition-colors"
+            >
+              <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <rect x="1.5" y="1.5" width="7" height="7" rx="1" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
+              className="w-11 h-full flex items-center justify-center hover:bg-[#E81123] hover:text-white text-gray-600 dark:text-gray-400 transition-colors"
+            >
+              <svg viewBox="0 0 10 10" width="10" height="10" fill="currentColor">
+                <path d="M1.5 1.5l7 7m-7 0l7-7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <div className="flex-1 overflow-hidden bg-white">
+        <div className="flex-1 overflow-hidden bg-white dark:bg-[#2d2d2d]">
           {children}
         </div>
         <div className="window-resize-handle" onMouseDown={handleResizeMouseDown} />

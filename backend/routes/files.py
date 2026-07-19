@@ -1,4 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse
+from pathlib import Path
+import mimetypes
 from pydantic import BaseModel
 from utils import file_system as fs
 
@@ -8,10 +11,6 @@ router = APIRouter()
 class CreateRequest(BaseModel):
     path: str
     isDirectory: bool = False
-
-
-class DeleteRequest(BaseModel):
-    path: str
 
 
 class RenameRequest(BaseModel):
@@ -24,14 +23,20 @@ class WriteRequest(BaseModel):
     content: str = ""
 
 
+class RestoreRequest(BaseModel):
+    name: str
+
+
 @router.get("")
 async def list_files(path: str = Query("/home")):
     try:
         return await fs.list_dir(path)
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
     except FileNotFoundError:
         return []
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.get("/read")
@@ -40,9 +45,11 @@ async def read_file(path: str = Query(...)):
         content = await fs.read_file(path)
         return {"content": content}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
     except FileNotFoundError:
         raise HTTPException(404, "File not found")
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.post("")
@@ -51,18 +58,22 @@ async def create_entry(body: CreateRequest):
         await fs.create(body.path, body.isDirectory)
         return {"success": True}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.delete("")
-async def delete_entry(body: DeleteRequest):
+async def delete_entry(path: str = Query(...)):
     try:
-        await fs.remove(body.path)
+        await fs.remove(path)
         return {"success": True}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
     except FileNotFoundError:
         raise HTTPException(404, "Not found")
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.put("/rename")
@@ -71,7 +82,9 @@ async def rename_entry(body: RenameRequest):
         await fs.rename(body.path, body.newName)
         return {"success": True}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
+    except OSError as e:
+        raise HTTPException(500, str(e))
 
 
 @router.put("/write")
@@ -80,4 +93,61 @@ async def write_entry(body: WriteRequest):
         await fs.write_file(body.path, body.content)
         return {"success": True}
     except PermissionError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(403, str(e))
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.get("/trash")
+async def list_trash():
+    try:
+        return await fs.list_trash()
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.post("/trash/restore")
+async def restore_item(body: RestoreRequest):
+    try:
+        await fs.restore_from_trash(body.name)
+        return {"success": True}
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except FileNotFoundError:
+        raise HTTPException(404, "Not found")
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.delete("/trash")
+async def empty_trash():
+    try:
+        await fs.empty_trash()
+        return {"success": True}
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.get("/download")
+async def download_file(path: str = Query(...)):
+    try:
+        file_path = await fs.resolve_path(path)
+        p = Path(file_path)
+        if not p.is_file():
+            raise HTTPException(404, "File not found")
+        media_type, _ = mimetypes.guess_type(str(p))
+        return FileResponse(path=str(p), media_type=media_type)
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except FileNotFoundError:
+        raise HTTPException(404, "File not found")
+    except OSError as e:
+        raise HTTPException(500, str(e))
+
+
+@router.get("/trash/archive")
+async def list_archive():
+    try:
+        return await fs.list_archive()
+    except OSError as e:
+        raise HTTPException(500, str(e))

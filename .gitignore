@@ -35,10 +35,7 @@ Thumbs.db
 npm-debug.log*
 
 # Runtime files
-files/uploads/*
-files/temp/*
-!files/uploads/.gitkeep
-!files/temp/.gitkeep
+files/
 
 # Package lock (keep if you want deterministic installs)
 # package-lock.json
